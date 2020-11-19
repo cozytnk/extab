@@ -57,6 +57,7 @@ const app = new Vue({
     tabs: [],
     filters: { title: '', url: '' },
     waitFor: 1500, // [ms]
+    settings: {},
   },
   computed: {
     filteredTabs () {
@@ -70,6 +71,12 @@ const app = new Vue({
     },
   },
   methods: {
+    async updateQuality (e) {
+      let value = e.target.value
+      const { settings } = await browser.storage.local.get([ 'settings' ])
+      settings.quality = value
+      chrome.storage.local.set({ settings })
+    },
   },
 })
 
@@ -157,3 +164,11 @@ chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
 })
 
 
+/**
+ */
+
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === 'local' && changes.settings) {
+    Vue.set(app, 'settings', changes.settings.newValue)
+  }
+})

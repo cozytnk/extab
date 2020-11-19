@@ -1,5 +1,6 @@
 console.log(`${chrome.runtime.id} background.js`)
 
+chrome.storage.local.set({ settings: { quality: 1 } })
 
 /**
  * utls
@@ -63,7 +64,8 @@ chrome.tabs.onActivated.addListener(async activeInfo => {
   // capture and store the activated tab
 
   try {
-    let dataUrl = await browser.tabs.captureVisibleTab({ format: 'jpeg', quality: 1 /* 1 ~ 100 */ })
+    const { settings } = await browser.storage.local.get([ 'settings' ])
+    let dataUrl = await browser.tabs.captureVisibleTab({ format: 'jpeg', quality: settings.quality /* 1 ~ 100 */ })
     // dataUrl = await resizeImage(dataUrl, 300, 300)
     chrome.storage.local.set({ [`${tabId}`]: { dataUrl } })
   } catch {}

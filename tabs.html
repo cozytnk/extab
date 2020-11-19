@@ -78,12 +78,14 @@
     <tabs class="main" :tabs="filteredTabs"></tabs>
     <div id="controls" class="side">
       {{ tabs.length }} tabs.<br>
+      {{ settings }}<br>
       <button id="reload">reload</button>
       <input type="search" placeholder="filter by title" v-model="filters.title">
       <input type="search" placeholder="filter by url"   v-model="filters.url"  >
       <button id="log-storage">log-storage</button>
       <button id="clear-storage">clear-storage</button>
-      <input type="number" placeholder="wait for [ms]" v-model="waitFor" style="width: 100%;;">
+      <input type="number" placeholder="wait for [ms]" v-model="waitFor" style="width: 100%;">
+      <input type="number" placeholder="quality (1 ~ 100)" style="width: 100%;" @change="updateQuality">
     </div>
   </div>
   <script src="tabs.js"></script>
