@@ -125,5 +125,14 @@ chrome.commands.onCommand.addListener(async cmd => {
     await browser.tabs.update(newtab.id, { active: true })
   }
 
+  if (cmd === 'OpenExtab') {
+    const tabs = await browser.tabs.query({ title: 'extab', currentWindow: true })
+    if (tabs.length === 0) {
+      chrome.tabs.create({ url: `tabs.html` })
+    } else {
+      chrome.tabs.update(tabs[0].id, { active: true })
+    }
+  }
+
 })
 

@@ -39,6 +39,10 @@
     "Left": {
       "suggested_key": { "default": "Ctrl+Left" },
       "description": "to left"
+    },
+    "OpenExtab": {
+      "suggested_key": { "default": "Ctrl+Space" },
+      "description": "open extab page"
     }
   }
 

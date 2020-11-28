@@ -5,18 +5,33 @@ console.log(`${chrome.runtime.id} tabs.js`)
  * component definitions
  */
 
-Vue.component('tab', {
+Vue.component('tab-card', {
   template: `
-    <div class="tab">
-      <img class="thumbnail" :src="tab.thumbnail || tab.favIconUrl" @click="updateThumbnail" />
-      <div @click="jump" style="cursor: pointer;">
-        <p><img :src="tab.favIconUrl" width="12" />&nbsp;{{ tab.index }}: {{ tab.title }}</p>
-        <p>{{ tab.url }}</p>
+    <div class="tab-card">
+      <img class="card-thumbnail" :src="tab.thumbnail || tab.favIconUrl" @click="updateThumbnail" />
+      <div class="card-content" @click="jump" style="cursor: pointer;">
+        <div class="card-title"><b>{{ tab.title }}</b></div>
+        <div v-if="debug">
+        {{ tab.id }}<br>
+        {{ tab.windowId }}<br>
+        {{ tab.thumbnail ? tab.thumbnail.length / 1024 : '-' }} kb<br>
+        {{ tab.url }}<br>
+        </div>
+      </div>
+      <div class="card-footer">
+        <img :src="tab.favIconUrl" width="16" height="16" />
+        <div style="font-size: 0.8em;">{{ host }}</div>
+        <div style="margin-left: auto;">{{ tab.index + 1 }}</div>
       </div>
     </div>`,
-  props: [ 'tab' ],
+  props: [ 'tab', 'debug' ],
   data () { return {} },
-  // watch: { "tab.thumbnail": () => { console.log(`tab.thumbnail changed`) } },
+  computed: {
+    host () {
+      const regx = /^.+?:\/\/(?<host>[^\/]+)\//
+      return regx.test(this.tab.url) ? this.tab.url.match(regx).groups.host : ''
+    },
+  },
   methods: {
     updateThumbnail () {
       getThumbnail(this.tab.id).then(thumbnail => {
@@ -33,17 +48,6 @@ Vue.component('tab', {
   },
 })
 
-Vue.component('tabs', {
-  template: `
-    <div class="tabs">
-      <tab :id="tab.id" v-for="tab in tabs" :key="tab.id" :tab="tab" />
-    </div>`,
-  props: [ 'tabs' ],
-  data () { return {} },
-  methods: {
-  },
-})
-
 
 /**
  * vue instance
@@ -54,8 +58,8 @@ const app = new Vue({
   data: {
     tabs: [],
     filters: { title: '', url: '' },
-    waitFor: 1500, // [ms]
     settings: {},
+    debug: false,
   },
   computed: {
     filteredTabs () {
@@ -149,9 +153,6 @@ document.querySelector('#clear-storage').onclick = () => {
 chrome.tabs.onActivated.addListener(async activeInfo => {
   console.log(`@chrome.tabs.onActivated\n  activeInfo.tabId: ${activeInfo.tabId}\n  activeInfo.windowId: ${activeInfo.windowId}`)
 
-  // const thisTab = await browser.tabs.getCurrent()
-  // if (activeInfo.windowId !== thisTab.windowId) return
-
   const tabId = activeInfo.tabId
   app.update(tabId)
 })
@@ -168,9 +169,6 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
 chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
   console.log(`@chrome.tabs.onRemoved\n  tabId: ${tabId}\n  removeInfo: ${removeInfo}`)
-
-  // const thisTab = await browser.tabs.getCurrent()
-  // if (removeInfo.windowId !== thisTab.windowId) return
 
   app.remove(tabId)
 })
