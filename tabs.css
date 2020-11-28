@@ -86,6 +86,8 @@ a.logo {
 }
 .card-content {
   padding: 6px 6px 0;
+  word-break: normal;
+  overflow: hidden;
 }
 .card-footer {
   padding: 16px 2px 2px 2px;
