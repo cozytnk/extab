@@ -55,20 +55,39 @@ chrome.browserAction.onClicked.addListener(async tab => {
 
 
 /**
- * onActivated/onRemoved 時にタブ情報を更新しローカルストレージに保存
+ * onActivated/onUpdated/onRemoved 時にタブキャプチャを更新しローカルストレージに保存
  */
+
+const capture = async tabId => {
+  let dataUrl = null
+
+  const [ currentTab ] = await browser.tabs.query({ active: true, currentWindow: true })
+  if (tabId === currentTab.id) {
+    try {
+      const { settings } = await browser.storage.local.get([ 'settings' ])
+      // let dataUrl = await browser.tabs.captureVisibleTab({ format: 'jpeg', quality: settings.quality /* 1 ~ 100 */ })
+      dataUrl = await browser.tabs.captureVisibleTab({ format: 'jpeg', quality: settings.quality /* 1 ~ 100 */ })
+      // dataUrl = await resizeImage(dataUrl, 300, 300)
+    } catch {}
+
+    chrome.storage.local.set({ [`${tabId}`]: { dataUrl } })
+  } else {
+    // do not set dataUrl to null here
+  }
+}
 
 chrome.tabs.onActivated.addListener(async activeInfo => {
   const tabId = activeInfo.tabId
+  capture(tabId)
+})
 
-  // capture and store the activated tab
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  console.log(`@chrome.tabs.onUpdated`)
+  console.log(changeInfo)
 
-  try {
-    const { settings } = await browser.storage.local.get([ 'settings' ])
-    let dataUrl = await browser.tabs.captureVisibleTab({ format: 'jpeg', quality: settings.quality /* 1 ~ 100 */ })
-    // dataUrl = await resizeImage(dataUrl, 300, 300)
-    chrome.storage.local.set({ [`${tabId}`]: { dataUrl } })
-  } catch {}
+  if (changeInfo.status === 'complete') {
+    capture(tabId)
+  }
 
 })
 
@@ -78,7 +97,7 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 
 
 /**
- * ショートカット wip
+ * ショートカット
  */
 
 chrome.commands.onCommand.addListener(async cmd => {
@@ -86,22 +105,22 @@ chrome.commands.onCommand.addListener(async cmd => {
   // alert(`@onCommand: ${cmd}`)
 
   if (cmd === 'Delete') {
-    let [curtab] = await browser.tabs.query({ active: true, currentWindow: true })
-    await browser.tabs.remove(curtab.id)
+    let [ currentTab ] = await browser.tabs.query({ active: true, currentWindow: true })
+    await browser.tabs.remove(currentTab.id)
   }
 
   if (cmd === 'Right') {
     let tabs = await browser.tabs.query({ currentWindow: true })
-    let [curtab] = await browser.tabs.query({ active: true, currentWindow: true })
-    let newIndex = (curtab.index + 1 + tabs.length) % tabs.length
+    let [ currentTab ] = await browser.tabs.query({ active: true, currentWindow: true })
+    let newIndex = (currentTab.index + 1 + tabs.length) % tabs.length
     let newtab = tabs[newIndex]
     await browser.tabs.update(newtab.id, { active: true })
   }
 
   if (cmd === 'Left') {
     let tabs = await browser.tabs.query({ currentWindow: true })
-    let [curtab] = await browser.tabs.query({ active: true, currentWindow: true })
-    let newIndex = (curtab.index - 1 + tabs.length) % tabs.length
+    let [ currentTab ] = await browser.tabs.query({ active: true, currentWindow: true })
+    let newIndex = (currentTab.index - 1 + tabs.length) % tabs.length
     let newtab = tabs[newIndex]
     await browser.tabs.update(newtab.id, { active: true })
   }

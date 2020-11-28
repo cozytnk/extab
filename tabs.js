@@ -9,11 +9,9 @@ Vue.component('tab', {
   template: `
     <div class="tab">
       <img class="thumbnail" :src="tab.thumbnail || tab.favIconUrl" @click="updateThumbnail" />
-      <br>
       <div @click="jump" style="cursor: pointer;">
-        <img :src="tab.favIconUrl" width="12" />&nbsp;{{ tab.index }}: {{ tab.title }}
-        <br><br>
-        <div>{{ tab.url }}</div>
+        <p><img :src="tab.favIconUrl" width="12" />&nbsp;{{ tab.index }}: {{ tab.title }}</p>
+        <p>{{ tab.url }}</p>
       </div>
     </div>`,
   props: [ 'tab' ],
@@ -77,6 +75,26 @@ const app = new Vue({
       settings.quality = value
       chrome.storage.local.set({ settings })
     },
+    async update (tabId) {
+      const tab = await browser.tabs.get(tabId)
+      tab.thumbnail = await getThumbnail(tabId)
+      const i = this.tabs.findIndex(tab => tab.id === tabId)
+      if (i === -1) {
+        this.tabs.splice(tab.index, 0, tab) // tab.index番目にリアクティブに挿入
+      } else {
+        this.tabs.splice(i, 1, tab) // i番目をリアクティブに差し替え
+      }
+    },
+    remove (tabId) {
+      console.log(`@app.remove ${tabId}`)
+      const i = this.tabs.findIndex(tab => tab.id === tabId)
+      if (i !== -1) this.tabs.splice(i, 1) // リアクティブにi番目の要素を削除
+    },
+    async setThumbnail (tabId, thumbnail) {
+      const i = this.tabs.findIndex(tab => tab.id === tabId)
+      // console.log(`@app.setThumbnail ${tabId} ${typeof tabId} ${Boolean(thumbnail)} ${i}`)
+      if (i !== -1)  this.$set(this.tabs[i], 'thumbnail', thumbnail) // リアクティブに値を変更
+    },
   },
 })
 
@@ -87,9 +105,8 @@ const app = new Vue({
 
 const getThumbnail = async (tabId) => {
   const key = `${tabId}`
-  const items = await browser.storage.local.get([ key ])
-  const tabInfo = items[key]
-  return tabInfo && tabInfo.dataUrl
+  const items = await browser.storage.local.get({ [key]: { dataUrl: null } })
+  return items[key].dataUrl
 }
 
 const load = async () => {
@@ -127,48 +144,57 @@ document.querySelector('#clear-storage').onclick = () => {
 
 /**
  * タブの情報更新時に自動で表示を更新
- * background.jsではonActivated/onRemoved時に情報を更新する
  */
 
 chrome.tabs.onActivated.addListener(async activeInfo => {
-  console.log(`@onActivated ${activeInfo.tabId} ${activeInfo.windowId}`)
+  console.log(`@chrome.tabs.onActivated\n  activeInfo.tabId: ${activeInfo.tabId}\n  activeInfo.windowId: ${activeInfo.windowId}`)
 
-  const thisTab = await browser.tabs.getCurrent()
-  if (activeInfo.windowId !== thisTab.windowId) return
-
-  await new Promise(resolve => setTimeout(resolve, app.waitFor)) // wait XXXX milliseconds
-  console.log(`@onActivated: waited for ${app.waitFor}`)
-  app.$data.waitForSecs
+  // const thisTab = await browser.tabs.getCurrent()
+  // if (activeInfo.windowId !== thisTab.windowId) return
 
   const tabId = activeInfo.tabId
-  let i = app.tabs.findIndex(tab => tab.id === tabId)
+  app.update(tabId)
+})
 
-  const tab = await browser.tabs.get(tabId)
-  tab.thumbnail = await getThumbnail(tabId)
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  console.log(`@chrome.tabs.onUpdated\n  tabId: ${tabId}`)
+  console.log(changeInfo)
 
-  if (i === -1) {
-    app.tabs.splice(tab.index, 0, tab) // tab.index番目にリアクティブに挿入
-  } else {
-    app.tabs.splice(i, 1, tab) // i番目をリアクティブに差し替え
+  if (changeInfo.status === 'complete') {
+    app.update(tabId)
   }
+
 })
 
 chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
-  console.log(`@onRemoved ${tabId} ${removeInfo}`)
+  console.log(`@chrome.tabs.onRemoved\n  tabId: ${tabId}\n  removeInfo: ${removeInfo}`)
 
-  const thisTab = await browser.tabs.getCurrent()
-  if (removeInfo.windowId !== thisTab.windowId) return
+  // const thisTab = await browser.tabs.getCurrent()
+  // if (removeInfo.windowId !== thisTab.windowId) return
 
-  let i = app.tabs.findIndex(tab => tab.id === tabId)
-  app.tabs.splice(i, 1) // リアクティブにi番目の要素を削除
+  app.remove(tabId)
 })
+
 
 
 /**
  */
 
 chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace === 'local' && changes.settings) {
+  console.log(`@chrome.storage.onChanged\n  changes: ${changes}\n  namespace: ${namespace}`)
+  console.log(changes)
+
+  console.assert(namespace === 'local')
+
+  if (changes.settings) {
     Vue.set(app, 'settings', changes.settings.newValue)
+  } else {
+    for (const key in changes) {
+      const tabId = Number(key)
+      const change = changes[key]
+      if (!change.newValue) continue
+      app.setThumbnail(tabId, change.newValue.dataUrl)
+    }
   }
+
 })
