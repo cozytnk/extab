@@ -81,6 +81,9 @@ const app = new Vue({
     },
     async update (tabId) {
       const tab = await browser.tabs.get(tabId)
+      const [ currentTab ] = await browser.tabs.query({ active: true, currentWindow: true })
+      if (tab.windowId !== currentTab.windowId) return
+
       tab.thumbnail = await getThumbnail(tabId)
       const i = this.tabs.findIndex(tab => tab.id === tabId)
       if (i === -1) {
