@@ -6,7 +6,7 @@
   "description": "extab",
 
   "icons": {
-    "16": "icon/folder 16r.png"
+    "16": "favicon.png"
   },
 
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
