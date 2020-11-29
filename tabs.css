@@ -36,7 +36,11 @@ html, body {
 .side {
   grid-area: side;
   background-color: #ddd;
-  padding: 18px;
+  padding: 24px 18px;
+  font-size: small;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 a.logo {
@@ -50,8 +54,8 @@ a.logo {
   opacity: 0.9;
   margin-right: 24px;
 }
-.filter {
-  /* width: 400px; */
+.header > input[type="text"],
+.header > select {
   flex: 1;
   height: 28px;
   padding: 6px 10px;

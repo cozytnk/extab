@@ -52,14 +52,17 @@ Vue.component('tab-card', {
 /**
  * vue instance
  */
-
 const app = new Vue({
   el: '#app',
   data: {
+    windows: [],
+    currentWindowId: null,
+    selectedWindowId: null,
     tabs: [],
     filters: { title: '', url: '' },
     settings: {},
     debug: false,
+    bytesInUse_XB: 0,
   },
   computed: {
     filteredTabs () {
@@ -72,17 +75,32 @@ const app = new Vue({
       })
     },
   },
-  methods: {
-    async updateQuality (e) {
-      let value = e.target.value
-      const { settings } = await browser.storage.local.get([ 'settings' ])
-      settings.quality = value
-      chrome.storage.local.set({ settings })
+  watch: {
+    selectedWindowId () {
+      this.updateAllTabs()
     },
-    async update (tabId) {
+  },
+  async mounted () {
+    await this.updateWindows()
+    await this.updateAllTabs()
+    const { settings } = await browser.storage.local.get({ settings: {} })
+    this.settings = settings
+  },
+  methods: {
+    async updateWindows () {
+      this.windows = await browser.windows.getAll()
+      this.currentWindowId = (await browser.windows.getCurrent()).id
+      if (this.windows.findIndex(win => win.id === this.selectedWindowId) === -1) this.selectedWindowId = this.currentWindowId
+    },
+    async updateAllTabs () {
+      // const tabs = await browser.tabs.query({ currentWindow: true })
+      const tabs = await browser.tabs.query({ windowId: this.selectedWindowId })
+      for (const tab of tabs) tab.thumbnail = await getThumbnail(tab.id)
+      this.tabs = tabs
+    },
+    async updateTab (tabId) {
       const tab = await browser.tabs.get(tabId)
-      const [ currentTab ] = await browser.tabs.query({ active: true, currentWindow: true })
-      if (tab.windowId !== currentTab.windowId) return
+      if (tab.windowId !== this.selectedWindowId) return
 
       tab.thumbnail = await getThumbnail(tabId)
       const i = this.tabs.findIndex(tab => tab.id === tabId)
@@ -92,15 +110,24 @@ const app = new Vue({
         this.tabs.splice(i, 1, tab) // i番目をリアクティブに差し替え
       }
     },
-    remove (tabId) {
-      console.log(`@app.remove ${tabId}`)
+    removeTab (tabId) {
+      console.log(`@app.removeTab ${tabId}`)
       const i = this.tabs.findIndex(tab => tab.id === tabId)
       if (i !== -1) this.tabs.splice(i, 1) // リアクティブにi番目の要素を削除
     },
     async setThumbnail (tabId, thumbnail) {
       const i = this.tabs.findIndex(tab => tab.id === tabId)
-      // console.log(`@app.setThumbnail ${tabId} ${typeof tabId} ${Boolean(thumbnail)} ${i}`)
       if (i !== -1)  this.$set(this.tabs[i], 'thumbnail', thumbnail) // リアクティブに値を変更
+    },
+    async updateQuality (e) {
+      let value = Number(e.target.value) || 0
+      if ((value < 1) || (100 < value)) {
+        alert(`@updateQuality: invalid value.`)
+        return
+      }
+      const { settings } = await browser.storage.local.get([ 'settings' ])
+      settings.quality = value
+      chrome.storage.local.set({ settings })
     },
   },
 })
@@ -116,48 +143,24 @@ const getThumbnail = async (tabId) => {
   return items[key].dataUrl
 }
 
-const load = async () => {
-  console.log('@load')
-  const tabs = await browser.tabs.query({ currentWindow: true })
-  for (const tab of tabs) tab.thumbnail = await getThumbnail(tab.id)
-  Vue.set(app, 'tabs', tabs)
-}
-
 
 /**
  * events
  */
 
-window.onload = async () => {
-  await load()
-}
 
-document.querySelector('#reload').onclick = async () => {
-  console.log('@reload')
-  await load()
-}
-
-// DEBUG:
-document.querySelector('#log-storage').onclick = () => {
-  console.log('@log-storage')
-  chrome.storage.local.get(null, items => console.log(items))
-}
-
-document.querySelector('#clear-storage').onclick = () => {
-  console.log('@clear-storage')
-  chrome.storage.local.clear()
-}
 
 
 /**
- * タブの情報更新時に自動で表示を更新
+ * monitor tabs
  */
 
 chrome.tabs.onActivated.addListener(async activeInfo => {
   console.log(`@chrome.tabs.onActivated\n  activeInfo.tabId: ${activeInfo.tabId}\n  activeInfo.windowId: ${activeInfo.windowId}`)
 
   const tabId = activeInfo.tabId
-  app.update(tabId)
+  app.updateTab(tabId)
+  // app.updateAllTabs()
 })
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
@@ -165,7 +168,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   console.log(changeInfo)
 
   if (changeInfo.status === 'complete') {
-    app.update(tabId)
+    app.updateTab(tabId)
+    // app.updateAllTabs()
   }
 
 })
@@ -173,24 +177,35 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
   console.log(`@chrome.tabs.onRemoved\n  tabId: ${tabId}\n  removeInfo: ${removeInfo}`)
 
-  app.remove(tabId)
+  app.removeTab(tabId)
+  // app.updateAllTabs()
 })
 
+/**
+ * monitor windows
+ */
+chrome.windows.onCreated.addListener(window => {
+  app.updateWindows()
+})
 
+chrome.windows.onRemoved.addListener(windowId => {
+  app.updateWindows()
+})
 
 /**
+ * monitor local storage
  */
 
-chrome.storage.onChanged.addListener((changes, namespace) => {
+chrome.storage.onChanged.addListener(async (changes, namespace) => {
   console.log(`@chrome.storage.onChanged\n  changes: ${changes}\n  namespace: ${namespace}`)
-  console.log(changes)
 
   console.assert(namespace === 'local')
 
-  if (changes.settings) {
-    Vue.set(app, 'settings', changes.settings.newValue)
-  } else {
-    for (const key in changes) {
+  for (const key in changes) {
+
+    if (key === 'settings') {
+      Vue.set(app, 'settings', changes.settings.newValue)
+    } else {
       const tabId = Number(key)
       const change = changes[key]
       if (!change.newValue) continue
@@ -198,4 +213,25 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     }
   }
 
+  const bytesInUse = await browser.storage.local.getBytesInUse(null)
+  const bytesInUse_XB = bytesInUse &&
+    (bytesInUse < 1024   ) ? `${bytesInUse} B` :
+    (bytesInUse < 1048576) ? `${(bytesInUse / 1024).toFixed(2)} KB` :
+    `${(bytesInUse / 1048576).toFixed(2)} MB`
+  Vue.set(app, 'bytesInUse_XB', bytesInUse_XB)
+
 })
+
+
+/**
+ * dev
+ */
+
+const dev = async () => {
+  const windows = await browser.windows.getAll()
+  console.log(`beta`)
+  this.a = windows
+
+  const currentWindow = await browser.windows.getCurrent()
+  console.log(currentWindow.id)
+}

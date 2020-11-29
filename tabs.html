@@ -21,17 +21,23 @@
       <input class="filter" type="text" placeholder="filter by title" v-model="filters.title">
       <input class="filter" type="text" placeholder="filter by url"   v-model="filters.url"  >
     </div>
+
     <div class="main tab-cards" :tabs="filteredTabs">
       <tab-card :id="tab.id" v-for="tab in filteredTabs" :key="tab.id" :tab="tab" :debug="debug" />
     </div>
+
     <div class="side">
-      DEBUG<br>
-      {{ settings }}<br>
+      <span>DEBUG/BETA</span>
+      <select v-model="selectedWindowId">
+        <option v-for="window in windows" v-bind:value="window.id">
+          window {{ window.id }} {{ window.id === currentWindowId ? '(current)' : '' }}
+        </option>
+      </select>
+      <span>{{ bytesInUse_XB }} used.</span>
+      <span>{{ settings }}</span>
       <button @click="debug ^= true">debug</button>
-      <button id="reload">reload</button>
-      <button id="log-storage">log-storage</button>
-      <button id="clear-storage">clear-storage</button>
-      <input type="number" placeholder="quality (1 ~ 100)" style="width: 100%;" @change="updateQuality">
+      <button @click="updateAllTabs">reload</button>
+      <input type="number" min="1" max="100" step="1" pattern="^[1-9][0-9]?$|^100$" placeholder="quality (1 ~ 100)" style="width: 100%;" @change="updateQuality">
     </div>
   </div>
   <script src="tabs.js"></script>
