@@ -1,6 +1,6 @@
 console.log(`${chrome.runtime.id} background.js`)
 
-chrome.storage.local.set({ settings: { quality: 1 } })
+chrome.storage.local.set({ settings: { quality: 100 } })
 
 /**
  * utls
@@ -64,10 +64,9 @@ const capture = async tabId => {
   const [ currentTab ] = await browser.tabs.query({ active: true, currentWindow: true })
   if (tabId === currentTab.id) {
     try {
-      const { settings } = await browser.storage.local.get([ 'settings' ])
-      // let dataUrl = await browser.tabs.captureVisibleTab({ format: 'jpeg', quality: settings.quality /* 1 ~ 100 */ })
+      const { settings } = await browser.storage.local.get({ settings: { quality: 100 } })
       dataUrl = await browser.tabs.captureVisibleTab({ format: 'jpeg', quality: settings.quality /* 1 ~ 100 */ })
-      // dataUrl = await resizeImage(dataUrl, 300, 300)
+      dataUrl = await resizeImage(dataUrl, 300, 300)
     } catch {}
 
     chrome.storage.local.set({ [`${tabId}`]: { dataUrl } })
