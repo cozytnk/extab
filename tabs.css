@@ -68,7 +68,7 @@ a.logo {
   overflow: scroll;
   padding: 24px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 42px 32px;
 }
 .tab-card {
@@ -104,7 +104,7 @@ a.logo {
   width: 100%;
 }
 
-button {
+.button {
   display: inline-block;
   /* height: 28px; */
   height: 24px;

@@ -101,7 +101,6 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 
 chrome.commands.onCommand.addListener(async cmd => {
   console.log(`@onCommand: ${cmd}`)
-  // alert(`@onCommand: ${cmd}`)
 
   if (cmd === 'Delete') {
     let [ currentTab ] = await browser.tabs.query({ active: true, currentWindow: true })

@@ -12,10 +12,10 @@ Vue.component('tab-card', {
       <div class="card-content" @click="jump" style="cursor: pointer;">
         <div class="card-title"><b>{{ tab.title }}</b></div>
         <div v-if="debug">
-        {{ tab.id }}<br>
-        {{ tab.windowId }}<br>
-        {{ tab.thumbnail ? tab.thumbnail.length / 1024 : '-' }} kb<br>
-        {{ tab.url }}<br>
+          {{ tab.id }}<br>
+          {{ tab.windowId }}<br>
+          {{ tab.thumbnail?.length / 1024 }} kb<br>
+          {{ tab.url }}<br>
         </div>
       </div>
       <div class="card-footer">
@@ -29,18 +29,14 @@ Vue.component('tab-card', {
   computed: {
     host () {
       const regx = /^.+?:\/\/(?<host>[^\/]+)\//
-      return regx.test(this.tab.url) ? this.tab.url.match(regx).groups.host : ''
+      return this.tab.url.match(regx)?.groups.host || ''
     },
   },
   methods: {
     updateThumbnail () {
       getThumbnail(this.tab.id).then(thumbnail => {
-        // console.log(`[debug] thumbnail: ${thumbnail.length} bytes = ${thumbnail.length / 1000} kb = ${thumbnail.length / 1000000} mb`)
         this.$set(this.tab, 'thumbnail', thumbnail)
       })
-    },
-    titleWithFavicon (tab) {
-      return tab.favIconUrl ? `<img src="${tab.favIconUrl}" width="15" />&nbsp;${tab.title}` : `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${tab.title}`
     },
     jump () {
       chrome.tabs.update(this.tab.id, { active: true })
@@ -93,7 +89,6 @@ const app = new Vue({
       if (this.windows.findIndex(win => win.id === this.selectedWindowId) === -1) this.selectedWindowId = this.currentWindowId
     },
     async updateAllTabs () {
-      // const tabs = await browser.tabs.query({ currentWindow: true })
       const tabs = await browser.tabs.query({ windowId: this.selectedWindowId })
       for (const tab of tabs) tab.thumbnail = await getThumbnail(tab.id)
       this.tabs = tabs
@@ -117,7 +112,7 @@ const app = new Vue({
     },
     async setThumbnail (tabId, thumbnail) {
       const i = this.tabs.findIndex(tab => tab.id === tabId)
-      if (i !== -1)  this.$set(this.tabs[i], 'thumbnail', thumbnail) // リアクティブに値を変更
+      if (i !== -1) this.$set(this.tabs[i], 'thumbnail', thumbnail) // リアクティブに値を変更
     },
     async updateQuality (e) {
       let value = Number(e.target.value) || 0
@@ -142,13 +137,6 @@ const getThumbnail = async (tabId) => {
   const items = await browser.storage.local.get({ [key]: { dataUrl: null } })
   return items[key].dataUrl
 }
-
-
-/**
- * events
- */
-
-
 
 
 /**
@@ -223,15 +211,3 @@ chrome.storage.onChanged.addListener(async (changes, namespace) => {
 })
 
 
-/**
- * dev
- */
-
-const dev = async () => {
-  const windows = await browser.windows.getAll()
-  console.log(`beta`)
-  this.a = windows
-
-  const currentWindow = await browser.windows.getCurrent()
-  console.log(currentWindow.id)
-}
