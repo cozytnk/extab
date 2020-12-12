@@ -8,8 +8,14 @@ console.log(`${chrome.runtime.id} tabs.js`)
 Vue.component('tab-card', {
   template: `
     <div class="tab-card">
-      <img class="card-thumbnail" :src="tab.thumbnail || tab.favIconUrl" @click="updateThumbnail" />
-      <div class="card-content" @click="jump" style="cursor: pointer;">
+      <div class="card-thumbnail">
+        <img :src="tab.thumbnail || tab.favIconUrl" @click="updateThumbnail" />
+        <div class="thumbnail-overlap">
+          <i class="material-icons" @click="jump">north_east</i>
+          <i class="material-icons" @click="close">close</i>
+        </div>
+      </div>
+      <div class="card-content">
         <div class="card-title"><b>{{ tab.title }}</b></div>
         <div v-if="debug">
           {{ tab.id }}<br>
@@ -40,6 +46,9 @@ Vue.component('tab-card', {
     },
     jump () {
       chrome.tabs.update(this.tab.id, { active: true })
+    },
+    close () {
+      chrome.tabs.remove(this.tab.id)
     },
   },
 })

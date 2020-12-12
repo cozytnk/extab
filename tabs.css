@@ -85,8 +85,37 @@ a.logo {
   background-color: #ddd;
   border: 1px solid #ddd;
   border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+.card-thumbnail > img {
+  width: 100%;
+  height: 100%;
   /* object-fit: contain; */
   object-fit: cover;
+}
+.card-thumbnail > .thumbnail-overlap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(1, 1, 1, 0.5);
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 36px;
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+.card-thumbnail > .thumbnail-overlap:hover {
+  opacity: 1;
+}
+.card-thumbnail > .thumbnail-overlap > i {
+  font-size: 48px;
+  font-weight: bold;
+  cursor: pointer;
 }
 .card-content {
   padding: 6px 6px 0;
