@@ -171,6 +171,28 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
 })
 
+chrome.tabs.onMoved.addListener(async (tabId, moveInfo) => {
+  const { fromIndex, toIndex, windowId } = moveInfo
+  if (windowId === app.selectedWindowId) {
+    app.removeTab(tabId)
+    app.updateTab(tabId)
+  }
+})
+
+chrome.tabs.onDetached.addListener(async (tabId, detachInfo) => {
+  const { oldPosition, oldWindowId } = detachInfo
+  if (oldWindowId === app.selectedWindowId) {
+    app.removeTab(tabId)
+  }
+})
+
+chrome.tabs.onAttached.addListener(async (tabId, attachInfo) => {
+  const { newPosition, newWindowId } = attachInfo
+  if (newWindowId === app.selectedWindowId) {
+    app.updateTab(tabId)
+  }
+})
+
 chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
   console.log(`@chrome.tabs.onRemoved\n  tabId: ${tabId}\n  removeInfo: ${removeInfo}`)
 
