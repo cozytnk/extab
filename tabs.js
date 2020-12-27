@@ -26,8 +26,8 @@ Vue.component('tab-card', {
       </div>
       <div class="card-footer">
         <img :src="tab.favIconUrl" width="16" height="16" />
-        <div style="font-size: 0.8em;">{{ host }}</div>
-        <div style="margin-left: auto;">{{ tab.index + 1 }}</div>
+        <span style="font-size: 0.8em;">{{ host }}</span>
+        <span style="margin-left: auto;">{{ tab.index + 1 }}</span>
       </div>
     </div>`,
   props: [ 'tab', 'debug' ],
@@ -132,6 +132,11 @@ const app = new Vue({
       const { settings } = await browser.storage.local.get([ 'settings' ])
       settings.quality = value
       chrome.storage.local.set({ settings })
+    },
+    debug_ () {
+      this.debug ^= true
+      const tab = { id: -1, index: 0, title: '123', url: 'http://qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnm/12345678901234567890' }
+      this.tabs.splice(tab.index, 0, tab) // tab.index番目にリアクティブに挿入
     },
   },
 })

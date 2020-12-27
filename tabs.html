@@ -36,7 +36,7 @@
       </select>
       <span>{{ bytesInUse_XB }} used.</span>
       <span>{{ settings }}</span>
-      <button @click="debug ^= true">debug</button>
+      <button @click="debug_">debug</button>
       <button @click="updateAllTabs">reload</button>
       <input type="number" min="1" max="100" step="1" pattern="^[1-9][0-9]?$|^100$" placeholder="quality (1 ~ 100)" style="width: 100%;" @change="updateQuality">
     </div>

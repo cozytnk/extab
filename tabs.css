@@ -65,7 +65,7 @@ a.logo {
 }
 
 .tab-cards {
-  overflow: scroll;
+  overflow: auto;
   padding: 24px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -118,15 +118,21 @@ a.logo {
   cursor: pointer;
 }
 .card-content {
-  padding: 6px 6px 0;
-  word-break: normal;
   overflow: hidden;
+  word-break: normal;
+  padding: 6px 6px 0;
 }
 .card-footer {
+  overflow: hidden;
   padding: 16px 2px 2px 2px;
   display: flex;
   align-items: center;
   gap: 6px;
+}
+.card-footer > span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .side > input[type="search"] {
