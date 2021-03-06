@@ -1,6 +1,6 @@
 console.log(`${chrome.runtime.id} background.js`)
-
 chrome.storage.local.set({ settings: { quality: 100 } })
+
 
 /**
  * utls
@@ -38,19 +38,23 @@ const resizeImage = (base64Str, maxWidth, maxHeight) => {
   })
 }
 
+const openExtab = async () => {
+
+  const [ extab ] = await browser.tabs.query({ title: 'extab', currentWindow: true })
+  if (extab) {
+    chrome.tabs.update(extab.id, { active: true })
+  } else {
+    chrome.tabs.create({ url: 'tabs.html' })
+  }
+}
+
 
 /**
  * アイコン押下時に既定ページを開く
  */
 
 chrome.browserAction.onClicked.addListener(async tab => {
-
-  const tabs = await browser.tabs.query({ title: 'extab', currentWindow: true })
-  if (tabs.length === 0) {
-    chrome.tabs.create({ url: `tabs.html` })
-  } else {
-    chrome.tabs.update(tabs[0].id, { active: true })
-  }
+  await openExtab()
 })
 
 
@@ -58,39 +62,37 @@ chrome.browserAction.onClicked.addListener(async tab => {
  * onActivated/onUpdated/onRemoved 時にタブキャプチャを更新しローカルストレージに保存
  */
 
-const capture = async tabId => {
-  let dataUrl = null
-
-  const [ currentTab ] = await browser.tabs.query({ active: true, currentWindow: true })
-  if (tabId === currentTab.id) {
-    try {
-      const { settings } = await browser.storage.local.get({ settings: { quality: 100 } })
-      dataUrl = await browser.tabs.captureVisibleTab({ format: 'jpeg', quality: settings.quality /* 1 ~ 100 */ })
-      dataUrl = await resizeImage(dataUrl, 300, 300)
-    } catch {}
-
-    chrome.storage.local.set({ [`${tabId}`]: { dataUrl } })
-  } else {
-    // do not set dataUrl to null here
+const captureCurrentTab = async () => {
+  try {
+    const [ currentTab ] = await browser.tabs.query({ active: true, currentWindow: true })
+    let dataUrl = await browser.tabs.captureVisibleTab({ format: 'png' })
+    dataUrl = await resizeImage(dataUrl, 300, 300)
+    chrome.storage.local.set({ [`${currentTab.id}`]: { dataUrl } })
+  } catch (error) {
+    // console.error(error)
+    // console.error(error.message)
   }
 }
 
 chrome.tabs.onActivated.addListener(async activeInfo => {
-  const tabId = activeInfo.tabId
-  capture(tabId)
+  console.log(`@chrome.tabs.onActivated`)
+  console.log(activeInfo)
+  // const tabId = activeInfo.tabId
+  captureCurrentTab()
 })
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   console.log(`@chrome.tabs.onUpdated`)
   console.log(changeInfo)
 
-  if (changeInfo.status === 'complete') {
-    capture(tabId)
-  }
+  if (changeInfo.status === 'complete') captureCurrentTab()
+  // captureCurrentTab()
 
 })
 
 chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
+  console.log(`@chrome.tabs.onRemoved`)
+  console.log(removeInfo)
   chrome.storage.local.remove([`${tabId}`])
 })
 
@@ -124,12 +126,7 @@ chrome.commands.onCommand.addListener(async cmd => {
   }
 
   if (cmd === 'OpenExtab') {
-    const tabs = await browser.tabs.query({ title: 'extab', currentWindow: true })
-    if (tabs.length === 0) {
-      chrome.tabs.create({ url: `tabs.html` })
-    } else {
-      chrome.tabs.update(tabs[0].id, { active: true })
-    }
+    await openExtab()
   }
 
 })

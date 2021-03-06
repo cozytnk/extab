@@ -138,6 +138,9 @@ const app = new Vue({
       const tab = { id: -1, index: 0, title: '123', url: 'http://qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnm/12345678901234567890' }
       this.tabs.splice(tab.index, 0, tab) // tab.index番目にリアクティブに挿入
     },
+    async clearStorage () {
+      chrome.storage.local.clear()
+    },
   },
 })
 
