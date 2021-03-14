@@ -16,7 +16,6 @@ html, body {
   grid-template-areas:
     "header header"
     "main   side  ";
-  font-size: 1.5em;
   color: #222;
 }
 .header {

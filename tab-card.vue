@@ -26,7 +26,7 @@
 
   <div class="card-footer">
     <img :src="tab.favIconUrl" width="16" height="16" />
-    <span style="font-size: 0.8em;">{{ host }}</span>
+    <span class="host">{{ host }}</span>
     <span style="margin-left: auto;">{{ index + 1 }}</span>
   </div>
 
@@ -74,15 +74,18 @@ module.exports = {
 
 <style scoped>
 .tab-card {
-  /* border: 2px solid #ddd; */
-  /* border-radius: 4px; */
   border-bottom: solid 1px #ddd;
-  /* box-shadow: 0 1px 4px 0 #ccc; */
   display: grid;
+  grid-template:
+    "thumbnail" auto
+    "content  " 1fr
+    "footer   " auto
+    /     100%;
   grid-template-rows: auto 1fr auto;
+  padding: 1px; /* focus時にoutlineに重ならないようにする */
 }
+
 .card-thumbnail {
-  width: 100%;
   height: 180px;
   background-color: #ddd;
   border: 1px solid #ddd;
@@ -93,7 +96,6 @@ module.exports = {
 .card-thumbnail > img {
   width: 100%;
   height: 100%;
-  /* object-fit: contain; */
   object-fit: cover;
 }
 .card-thumbnail > .thumbnail-overlap {
@@ -102,7 +104,7 @@ module.exports = {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(1, 1, 1, 0.5);
+  background-color: rgba(0, 0, 0, 0.5);
   color: #fff;
   display: flex;
   justify-content: center;
@@ -119,11 +121,16 @@ module.exports = {
   font-weight: bold;
   cursor: pointer;
 }
+
 .card-content {
   overflow: hidden;
   word-break: normal;
   padding: 6px 6px 0;
 }
+.card-title {
+  font-size: 18px;
+}
+
 .card-footer {
   overflow: hidden;
   padding: 16px 2px 2px 2px;
@@ -135,5 +142,9 @@ module.exports = {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  font-size: 16px;
+}
+.card-footer > .host {
+  font-size: 14px;
 }
 </style>
