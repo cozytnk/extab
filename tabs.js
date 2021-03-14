@@ -1,64 +1,13 @@
 console.log(`${chrome.runtime.id} tabs.js`)
 
-
-/**
- * component definitions
- */
-
-Vue.component('tab-card', {
-  template: `
-    <div class="tab-card">
-      <div class="card-thumbnail">
-        <img :src="tab.thumbnail || tab.favIconUrl" @click="updateThumbnail" />
-        <div class="thumbnail-overlap">
-          <i class="material-icons" @click="jump">north_east</i>
-          <i class="material-icons" @click="close">close</i>
-        </div>
-      </div>
-      <div class="card-content">
-        <div class="card-title"><b>{{ tab.title }}</b></div>
-        <div v-if="debug">
-          {{ tab.id }}<br>
-          {{ tab.windowId }}<br>
-          {{ tab.thumbnail?.length / 1024 }} kb<br>
-          {{ tab.url }}<br>
-        </div>
-      </div>
-      <div class="card-footer">
-        <img :src="tab.favIconUrl" width="16" height="16" />
-        <span style="font-size: 0.8em;">{{ host }}</span>
-        <span style="margin-left: auto;">{{ tab.index + 1 }}</span>
-      </div>
-    </div>`,
-  props: [ 'tab', 'debug' ],
-  data () { return {} },
-  computed: {
-    host () {
-      const regx = /^.+?:\/\/(?<host>[^\/]+)\//
-      return this.tab.url.match(regx)?.groups.host || ''
-    },
-  },
-  methods: {
-    updateThumbnail () {
-      getThumbnail(this.tab.id).then(thumbnail => {
-        this.$set(this.tab, 'thumbnail', thumbnail)
-      })
-    },
-    jump () {
-      chrome.tabs.update(this.tab.id, { active: true })
-    },
-    close () {
-      chrome.tabs.remove(this.tab.id)
-    },
-  },
-})
-
+Vue.use(httpVueLoader)
 
 /**
  * vue instance
  */
 const app = new Vue({
   el: '#app',
+  components: [ 'url:tab-card.vue' ],
   data: {
     windows: [],
     currentWindowId: null,
