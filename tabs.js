@@ -18,18 +18,16 @@ const tabsManagerMixin = {
     /* monitor tabs */
 
     chrome.tabs.onActivated.addListener(async activeInfo => {
-      console.log(`@chrome.tabs.onActivated\n  activeInfo.tabId: ${activeInfo.tabId}\n  activeInfo.windowId: ${activeInfo.windowId}`)
-
-      const tabId = activeInfo.tabId
+      const { tabId, windowId } = activeInfo
+      console.debug(`@chrome.tabs.onActivated\n  tabId: ${tabId}\n  windowId: ${windowId}`)
       this.updateTab(tabId)
       // this.updateAllTabs()
     })
 
     chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-      console.log(`@chrome.tabs.onUpdated\n  tabId: ${tabId}`)
-      console.log(changeInfo)
-
-      if (changeInfo.status === 'complete') {
+      const { status } = changeInfo
+      console.debug(`@chrome.tabs.onUpdated\n  tabId: ${tabId}\n  status: ${status}`)
+      if (status === 'complete') {
         this.updateTab(tabId)
         // this.updateAllTabs()
       }
@@ -59,8 +57,7 @@ const tabsManagerMixin = {
     })
 
     chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
-      console.log(`@chrome.tabs.onRemoved\n  tabId: ${tabId}\n  removeInfo: ${removeInfo}`)
-
+      console.debug(`@chrome.tabs.onRemoved\n  tabId: ${tabId}`)
       this.removeTab(tabId)
       // app.updateAllTabs()
     })
@@ -68,10 +65,12 @@ const tabsManagerMixin = {
     /* monitor windows */
 
     chrome.windows.onCreated.addListener(window => {
+      console.debug(`@chrome.windows.onCreated`)
       this.updateWindows()
     })
 
     chrome.windows.onRemoved.addListener(windowId => {
+      console.debug(`@chrome.windows.onRemoved`)
       this.updateWindows()
     })
 
@@ -190,8 +189,7 @@ const getThumbnail = async (tabId) => {
  */
 
 chrome.storage.onChanged.addListener(async (changes, namespace) => {
-  console.log(`@chrome.storage.onChanged\n  changes: ${changes}\n  namespace: ${namespace}`)
-
+  console.debug(`@chrome.storage.onChanged\n  Object.keys(changes): ${Object.keys(changes).join('    \n')}\n  namespace: ${namespace}`)
   console.assert(namespace === 'local')
 
   for (const key in changes) {
