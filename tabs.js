@@ -90,6 +90,11 @@ const app = new Vue({
     async clearStorage () {
       chrome.storage.local.clear()
     },
+    focusTab (index) {
+      index = Math.max(index, 0)
+      index = Math.min(index, this.tabs.length - 1)
+      document.querySelector(`.tab-card-index-${index}`)?.focus()
+    },
   },
 })
 

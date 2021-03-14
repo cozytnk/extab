@@ -1,5 +1,5 @@
 <template>
-<div class="tab-card">
+<div class="tab-card" :class="[ `tab-card-index-${index}` ]" tabindex="0" @keydown="onkeydown">
 
   <div class="card-thumbnail">
     <img :src="tab.thumbnail || tab.favIconUrl" @click="updateThumbnail" />
@@ -22,7 +22,7 @@
   <div class="card-footer">
     <img :src="tab.favIconUrl" width="16" height="16" />
     <span style="font-size: 0.8em;">{{ host }}</span>
-    <span style="margin-left: auto;">{{ tab.index + 1 }}</span>
+    <span style="margin-left: auto;">{{ index + 1 }}</span>
   </div>
 
 </div>
@@ -32,7 +32,7 @@
 <script>
 // export default {
 module.exports = {
-  props: [ 'tab', 'debug' ],
+  props: [ 'tab', 'index', 'debug' ],
   data () { return {} },
   computed: {
     host () {
@@ -51,6 +51,16 @@ module.exports = {
     },
     close () {
       chrome.tabs.remove(this.tab.id)
+    },
+    onkeydown (event) {
+      const gridComputedStyle = window.getComputedStyle(document.querySelector('.tab-cards'))
+      const gridColumnCount = gridComputedStyle.getPropertyValue('grid-template-columns').split(' ').length
+      const shift = event.key === 'ArrowRight' ? 1
+        :           event.key === 'ArrowLeft'  ? -1
+        :           event.key === 'ArrowUp'    ? -gridColumnCount
+        :           event.key === 'ArrowDown'  ? gridColumnCount
+        :           0
+      this.$root.focusTab(this.index + shift)
     },
   },
 }

@@ -25,7 +25,7 @@
     </div>
 
     <div class="main tab-cards" :tabs="filteredTabs">
-      <tab-card :id="tab.id" v-for="tab in filteredTabs" :key="tab.id" :tab="tab" :debug="debug" />
+      <tab-card :id="tab.id" v-for="(tab, i) in filteredTabs" :key="tab.id" :tab="tab" :index="i" :debug="debug" />
     </div>
 
     <div class="side">
