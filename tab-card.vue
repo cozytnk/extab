@@ -1,5 +1,10 @@
 <template>
-<div class="tab-card" :class="[ `tab-card-index-${index}` ]" tabindex="0" @keydown="onkeydown">
+<div class="tab-card"
+  :class="[ `tab-card-index-${index}` ]"
+  tabindex="0"
+  @keydown="onkeydown"
+  @keydown.enter="jump"
+>
 
   <div class="card-thumbnail">
     <img :src="tab.thumbnail || tab.favIconUrl" @click="updateThumbnail" />
