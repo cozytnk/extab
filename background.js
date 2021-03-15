@@ -44,7 +44,7 @@ const openExtab = async () => {
   if (extab) {
     chrome.tabs.update(extab.id, { active: true })
   } else {
-    chrome.tabs.create({ url: 'tabs.html' })
+    chrome.tabs.create({ url: 'tabs-view/index.html' })
   }
 }
 

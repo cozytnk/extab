@@ -19,7 +19,7 @@
     "unlimitedStorage"
   ],
 
-  "web_accessible_resources": [ "assets/*" ],
+  "web_accessible_resources": [ "assets/*", "tabs-view/*" ],
 
   "browser_action": { "default_title": "extab" },
 
