@@ -20,8 +20,8 @@
     <div class="header">
       <a class="logo" href="https://github.com/cozytnk/extab">extab</a>
       <span>{{ tabs.length }} tabs.</span>
-      <input class="filter" type="text" placeholder="filter by title" v-model="filters.title">
-      <input class="filter" type="text" placeholder="filter by url"   v-model="filters.url"  >
+      <filterbox class="filterbox" ref="filterTitle" placeholder="filter by title" :uses-reg-exp.sync="filters.title.usesRegExp" :text.sync="filters.title.text"></filterbox>
+      <filterbox class="filterbox" ref="filterUrl"   placeholder="filter by url  " :uses-reg-exp.sync="filters.url  .usesRegExp" :text.sync="filters.url  .text"></filterbox>
     </div>
 
     <div class="main tab-cards" :tabs="filteredTabs">

@@ -53,14 +53,8 @@ a.logo {
   opacity: 0.9;
   margin-right: 24px;
 }
-.header > input[type="text"],
-.header > select {
+.filterbox {
   flex: 1;
-  height: 28px;
-  padding: 6px 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  box-shadow: none;
 }
 
 .tab-cards {

@@ -118,22 +118,24 @@ Vue.use(httpVueLoader)
  */
 const app = new Vue({
   el: '#app',
-  components: [ 'url:tab-card.vue' ],
+  components: [ 'url:tab-card.vue', 'url:filterbox.vue' ],
   mixins: [ tabsManagerMixin ],
   data: {
-    filters: { title: '', url: '' },
+    filters: {
+      title: { text: '', usesRegExp: false },
+      url  : { text: '', usesRegExp: false },
+    },
     settings: {},
     debug: false,
     bytesInUse_XB: 0,
   },
   computed: {
     filteredTabs () {
-      const filterRegx = {
-        title: new RegExp(this.filters.title),
-        url: new RegExp(this.filters.url),
-      }
+      const titleFilterFunc = this.$refs?.filterTitle?.test
+      const   urlFilterFunc = this.$refs?.filterUrl?.test
       return this.tabs.filter((tab, index) => {
-        return filterRegx.title.test(tab.title) && filterRegx.url.test(tab.url)
+        return (titleFilterFunc ? titleFilterFunc(tab.title) : true)
+          &&   (urlFilterFunc   ?   urlFilterFunc(tab.url  ) : true)
       })
     },
   },
