@@ -25,7 +25,8 @@ html, body {
   border-bottom: 2px solid #ddd;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 18px;
+  font-size: 18px;
 }
 .main {
   grid-area: main;
@@ -39,7 +40,7 @@ html, body {
   font-size: small;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 12px;
 }
 
 a.logo {
@@ -51,7 +52,6 @@ a.logo {
   font-size: medium;
   text-decoration: none;
   opacity: 0.9;
-  margin-right: 24px;
 }
 .filterbox {
   flex: 1;

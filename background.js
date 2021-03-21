@@ -75,24 +75,21 @@ const captureCurrentTab = async () => {
 }
 
 chrome.tabs.onActivated.addListener(async activeInfo => {
-  console.log(`@chrome.tabs.onActivated`)
-  console.log(activeInfo)
+  console.log(`@chrome.tabs.onActivated\n`, activeInfo)
   // const tabId = activeInfo.tabId
   captureCurrentTab()
 })
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  console.log(`@chrome.tabs.onUpdated`)
-  console.log(changeInfo)
+  console.log(`@chrome.tabs.onUpdated\n`, changeInfo)
 
   if (changeInfo.status === 'complete') captureCurrentTab()
   // captureCurrentTab()
-
 })
 
 chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
-  console.log(`@chrome.tabs.onRemoved`)
-  console.log(removeInfo)
+  console.log(`@chrome.tabs.onRemoved\n`, removeInfo)
+
   chrome.storage.local.remove([`${tabId}`])
 })
 
@@ -102,7 +99,7 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
  */
 
 chrome.commands.onCommand.addListener(async cmd => {
-  console.log(`@onCommand: ${cmd}`)
+  console.log(`@onCommand`, cmd)
 
   if (cmd === 'Delete') {
     let [ currentTab ] = await browser.tabs.query({ active: true, currentWindow: true })

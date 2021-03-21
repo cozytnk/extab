@@ -4,6 +4,7 @@
   tabindex="0"
   @keydown="onkeydown"
   @keydown.enter="jump"
+  @keydown.delete="close"
 >
 
   <div class="card-thumbnail">
@@ -35,7 +36,6 @@
 
 
 <script>
-// export default {
 module.exports = {
   props: [ 'tab', 'index', 'debug' ],
   data () { return {} },
@@ -55,6 +55,7 @@ module.exports = {
       chrome.tabs.update(this.tab.id, { active: true })
     },
     close () {
+      this.$root.focusTab(Math.max(this.index - 1, 0))
       chrome.tabs.remove(this.tab.id)
     },
     onkeydown (event) {

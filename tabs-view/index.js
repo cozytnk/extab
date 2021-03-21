@@ -18,15 +18,15 @@ const tabsManagerMixin = {
     /* monitor tabs */
 
     chrome.tabs.onActivated.addListener(async activeInfo => {
+      console.debug(`@chrome.tabs.onActivated`, activeInfo)
       const { tabId, windowId } = activeInfo
-      console.debug(`@chrome.tabs.onActivated\n  tabId: ${tabId}\n  windowId: ${windowId}`)
       this.updateTab(tabId)
       // this.updateAllTabs()
     })
 
     chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+      console.debug(`@chrome.tabs.onUpdated`, tabId, changeInfo, tab)
       const { status } = changeInfo
-      console.debug(`@chrome.tabs.onUpdated\n  tabId: ${tabId}\n  status: ${status}`)
       if (status === 'complete') {
         this.updateTab(tabId)
         // this.updateAllTabs()
@@ -35,6 +35,7 @@ const tabsManagerMixin = {
     })
 
     chrome.tabs.onMoved.addListener(async (tabId, moveInfo) => {
+      console.debug(`@chrome.tabs.onMoved`, tabId, moveInfo)
       const { fromIndex, toIndex, windowId } = moveInfo
       if (windowId === this.selectedWindowId) {
         this.removeTab(tabId)
@@ -43,6 +44,7 @@ const tabsManagerMixin = {
     })
 
     chrome.tabs.onDetached.addListener(async (tabId, detachInfo) => {
+      console.debug(`@chrome.tabs.onDetached`, tabId, detachInfo)
       const { oldPosition, oldWindowId } = detachInfo
       if (oldWindowId === this.selectedWindowId) {
         this.removeTab(tabId)
@@ -50,6 +52,7 @@ const tabsManagerMixin = {
     })
 
     chrome.tabs.onAttached.addListener(async (tabId, attachInfo) => {
+      console.debug(`@chrome.tabs.onAttached`, tabId, attachInfo)
       const { newPosition, newWindowId } = attachInfo
       if (newWindowId === this.selectedWindowId) {
         this.updateTab(tabId)
@@ -57,7 +60,7 @@ const tabsManagerMixin = {
     })
 
     chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
-      console.debug(`@chrome.tabs.onRemoved\n  tabId: ${tabId}`)
+      console.debug(`@chrome.tabs.onRemoved`, tabId, removeInfo)
       this.removeTab(tabId)
       // app.updateAllTabs()
     })
@@ -65,12 +68,12 @@ const tabsManagerMixin = {
     /* monitor windows */
 
     chrome.windows.onCreated.addListener(window => {
-      console.debug(`@chrome.windows.onCreated`)
+      console.debug(`@chrome.windows.onCreated`, window)
       this.updateWindows()
     })
 
     chrome.windows.onRemoved.addListener(windowId => {
-      console.debug(`@chrome.windows.onRemoved`)
+      console.debug(`@chrome.windows.onRemoved`, windowId)
       this.updateWindows()
     })
 
@@ -102,7 +105,7 @@ const tabsManagerMixin = {
       }
     },
     removeTab (tabId) {
-      console.log(`@app.removeTab ${tabId}`)
+      console.debug(`@app.removeTab`, tabId)
       const i = this.tabs.findIndex(tab => tab.id === tabId)
       if (i !== -1) this.tabs.splice(i, 1) // リアクティブにi番目の要素を削除
     },
@@ -191,7 +194,7 @@ const getThumbnail = async (tabId) => {
  */
 
 chrome.storage.onChanged.addListener(async (changes, namespace) => {
-  console.debug(`@chrome.storage.onChanged\n  Object.keys(changes): ${Object.keys(changes).join('    \n')}\n  namespace: ${namespace}`)
+  console.debug(`@chrome.storage.onChanged`, changes, namespace)
   console.assert(namespace === 'local')
 
   for (const key in changes) {
