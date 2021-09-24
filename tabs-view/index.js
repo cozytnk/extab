@@ -1,4 +1,16 @@
-console.log(`${chrome.runtime.id} tabs.js`)
+console.log(chrome.runtime?.id)
+
+
+const browser = (() => {
+  let browser = { tabs: {} }
+
+  for (const [key, value] of Object.entries(chrome.tabs || {})) {
+    browser.tabs[key] = (...args) => new Promise(resolve => value?.(...args, resolve))
+  }
+
+  return browser
+}) ()
+
 
 
 const tabsManagerMixin = {
@@ -114,16 +126,15 @@ const tabsManagerMixin = {
 
 
 
-Vue.use(httpVueLoader)
-
 /**
  * vue instance
  */
 const app = new Vue({
   el: '#app',
-  components: [ 'url:tab-card.vue', 'url:filterbox.vue' ],
-  mixins: [ tabsManagerMixin ],
+  // mixins: [ tabsManagerMixin ],
   data: {
+    items: [],
+    //
     filters: {
       title: { text: '', usesRegExp: false },
       url  : { text: '', usesRegExp: false },
@@ -134,17 +145,18 @@ const app = new Vue({
   },
   computed: {
     filteredTabs () {
-      const titleFilterFunc = this.$refs?.filterTitle?.test
-      const   urlFilterFunc = this.$refs?.filterUrl?.test
-      return this.tabs.filter((tab, index) => {
-        return (titleFilterFunc ? titleFilterFunc(tab.title) : true)
-          &&   (urlFilterFunc   ?   urlFilterFunc(tab.url  ) : true)
-      })
+      // const titleFilterFunc = this.$refs?.filterTitle?.test
+      // const   urlFilterFunc = this.$refs?.filterUrl?.test
+      // return this.tabs.filter((tab, index) => {
+      //   return (titleFilterFunc ? titleFilterFunc(tab.title) : true)
+      //     &&   (urlFilterFunc   ?   urlFilterFunc(tab.url  ) : true)
+      // })
     },
   },
   async mounted () {
-    const { settings } = await browser.storage.local.get({ settings: {} })
-    this.settings = settings
+    // const { settings } = await browser.storage.local.get({ settings: {} })
+    // this.settings = settings
+    this.items = await browser.tabs.query({ currentWindow: true })
   },
   methods: {
     async setThumbnail (tabId, thumbnail) {
@@ -161,18 +173,24 @@ const app = new Vue({
       settings.quality = value
       chrome.storage.local.set({ settings })
     },
-    debug_ () {
-      this.debug ^= true
-      const tab = { id: -1, index: 0, title: '123', url: 'http://qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnm/12345678901234567890' }
-      this.tabs.splice(tab.index, 0, tab) // tab.index番目にリアクティブに挿入
-    },
-    async clearStorage () {
-      chrome.storage.local.clear()
-    },
-    focusTab (index) {
+    focusItem (index) {
       index = Math.max(index, 0)
-      index = Math.min(index, this.tabs.length - 1)
-      document.querySelector(`.tab-card-index-${index}`)?.focus()
+      index = Math.min(index, this.items.length - 1)
+      // document.querySelector(`.item-index-${index}`).focus()
+      document.querySelector(`.item[index="${index}"]`).focus()
+    },
+    onkeydown (event) {
+      const computedStyle = window.getComputedStyle(document.querySelector('.items'))
+      const gridColumnCount = computedStyle.getPropertyValue('grid-template-columns').split(' ').length
+      // NOTE: display: flex; の場合も ['none'].length = 1 となりOK
+      const shift = event.key === 'ArrowRight' ? 1
+        :           event.key === 'ArrowLeft'  ? -1
+        :           event.key === 'ArrowUp'    ? -gridColumnCount
+        :           event.key === 'ArrowDown'  ? gridColumnCount
+        :           0
+      const index = Number(event.target.getAttribute('index'))
+      // console.log(index + shift)
+      this.focusItem(index + shift)
     },
   },
 })
@@ -184,8 +202,9 @@ const app = new Vue({
 
 const getThumbnail = async (tabId) => {
   const key = `${tabId}`
-  const items = await browser.storage.local.get({ [key]: { dataUrl: null } })
-  return items[key].dataUrl
+  return ''
+  // const items = await browser.storage.local.get({ [key]: { dataUrl: null } })
+  // return items[key].dataUrl
 }
 
 
@@ -193,29 +212,27 @@ const getThumbnail = async (tabId) => {
  * monitor local storage
  */
 
-chrome.storage.onChanged.addListener(async (changes, namespace) => {
-  console.debug(`@chrome.storage.onChanged`, changes, namespace)
-  console.assert(namespace === 'local')
+// chrome.storage.onChanged.addListener(async (changes, namespace) => {
+//   console.debug(`@chrome.storage.onChanged`, changes, namespace)
+//   console.assert(namespace === 'local')
 
-  for (const key in changes) {
+//   for (const key in changes) {
 
-    if (key === 'settings') {
-      Vue.set(app, 'settings', changes.settings.newValue)
-    } else {
-      const tabId = Number(key)
-      const change = changes[key]
-      if (!change.newValue) continue
-      app.setThumbnail(tabId, change.newValue.dataUrl)
-    }
-  }
+//     if (key === 'settings') {
+//       Vue.set(app, 'settings', changes.settings.newValue)
+//     } else {
+//       const tabId = Number(key)
+//       const change = changes[key]
+//       if (!change.newValue) continue
+//       app.setThumbnail(tabId, change.newValue.dataUrl)
+//     }
+//   }
 
-  const bytesInUse = await browser.storage.local.getBytesInUse(null)
-  const bytesInUse_XB = bytesInUse &&
-    (bytesInUse < 1024   ) ? `${bytesInUse} B` :
-    (bytesInUse < 1048576) ? `${(bytesInUse / 1024).toFixed(2)} KB` :
-    `${(bytesInUse / 1048576).toFixed(2)} MB`
-  Vue.set(app, 'bytesInUse_XB', bytesInUse_XB)
+//   const bytesInUse = await browser.storage.local.getBytesInUse(null)
+//   const bytesInUse_XB = bytesInUse &&
+//     (bytesInUse < 1024   ) ? `${bytesInUse} B` :
+//     (bytesInUse < 1048576) ? `${(bytesInUse / 1024).toFixed(2)} KB` :
+//     `${(bytesInUse / 1048576).toFixed(2)} MB`
+//   Vue.set(app, 'bytesInUse_XB', bytesInUse_XB)
 
-})
-
-
+// })
