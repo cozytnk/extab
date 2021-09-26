@@ -6,7 +6,9 @@
   <title>extab</title>
   <link rel="icon" href="../assets/favicon.png" type="image/png">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap&text=extab" rel="stylesheet">
+  <!-- <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap&text=extab" rel="stylesheet"> -->
+  <!-- <link href="https://fonts.googleapis.com/css2?family=Lemonada&display=swap&text=extab" rel="stylesheet"> -->
+  <link href="https://fonts.googleapis.com/css2?family=Grandstander&display=swap&text=extab" rel="stylesheet">
   <script src="./vue.min.js"></script>
 <style>
 * { box-sizing: border-box; }
@@ -35,12 +37,15 @@ body { width: 100%; height: 100vh; padding: 0; margin: 0; overflow: hidden; }
 }
 
 a.logo {
-  padding: 6px 10px;
+  height: 28px;
+  padding: 8px 10px;
   background-color: royalblue;
   border-radius: 20px;
-  font-family: 'Orbitron', sans-serif;
+  /* font-family: 'Orbitron', sans-serif; */
+  /* font-family: 'Lemonada'; */
+  font-family: 'Grandstander';
   color: #fff;
-  font-size: 14px;
+  font-size: 16px;
   text-decoration: none;
 }
 .header > input[type=text] {
@@ -55,19 +60,20 @@ a.logo {
 }
 .header > select {
   height: 28px;
+  min-width: 50px;
   padding: 6px;
   border: 1px solid #ddd;
   border-radius: 4px;
   box-shadow: none;
 }
+.header > .icon:hover { cursor: pointer ;}
 
 .items {
   overflow-y: auto;
 }
 .item:focus {
-  background-color: #ccc;
+  background-color: #eee;
 }
-.thumbnail { display: none; }
 .favicon {  }
 .title {  }
 .url {
@@ -76,7 +82,6 @@ a.logo {
 }
 .id { font-size: 12px; color: #888; text-align: right; }
 .index { text-align: right; }
-.host { display: none; }
 .actions { display: flex; }
 .action { padding: 3px; border-radius: 3px; font-size: 20px; }
 .action:hover { background-color: #eee; cursor: pointer; }
@@ -93,7 +98,7 @@ a.logo {
   grid-template:
     "favicon title actions index" auto
     "favicon url   actions id" minmax(0, 1fr)
-    / auto minmax(0, 1fr) auto auto;
+    / auto minmax(0, 1fr) auto 36px;
   align-items: center;
 }
 .listview .thumbnail { display: none; }
@@ -106,7 +111,7 @@ a.logo {
 .listview .id {  }
 .listview .index {  }
 .listview .host { display: none; }
-.listview .actions { padding: 0 10px; }
+.listview .actions { padding-right: 4px; margin: 0 6px 0 10px; border-right: 1px solid #ddd; }
 
 .items.gridview {
   display: grid;
@@ -127,17 +132,15 @@ a.logo {
     / minmax(0, 1fr) auto;
   align-items: center;
 }
-.gridview .thumbnail { display: none; }
 .gridview .favicon {
-  --size: 100px; width: 100%; height: var(--size);
+  --size: 120px; width: 100%; height: var(--size);
   background-color: #eee;
   object-fit: contain;
 }
 .gridview .title { margin-top: 6px; margin-bottom: auto; }
-.gridview .url { margin-bottom: 6px; }
+.gridview .url { margin: 10px 0 6px; }
 .gridview .id {  }
 .gridview .index {  }
-.gridview .host { display: none; }
 .gridview .actions {  }
 
 </style>
@@ -149,8 +152,7 @@ a.logo {
     <div class="header">
       <a class="logo" href="https://github.com/cozytnk/extab">extab</a>
       <span>{{ items.length }} tabs</span>
-      <input type="text" placeholder="filter by title">
-      <input type="text" placeholder="filter by url">
+      <input type="text" placeholder="filter" v-model="filter.text">
       <select v-model="windowId">
         <option v-for="window in windows" :value="window.id"> window {{ window.id }}</option>
       </select>
@@ -158,17 +160,16 @@ a.logo {
         <option value="list">List</option>
         <option value="grid">Grid</option>
       </select>
+      <span title="check duplicates" class="icon material-icons" @click="checkDuplicates">filter_none</span>
     </div>
 
     <div class="main items" :class="{ listview: itemsLayout === 'list', gridview: itemsLayout === 'grid' }">
-      <div class="item" tabindex="0" v-for="(item, index) in items" :key="item.id" :index="item.index" @keydown="onkeydown" @keydown.enter="open(item.id)" @keydown.delete="close(item.id)">
-        <img class="thumbnail">
-        <img class="favicon" style="grid-area: favicon;" :src="item.favIconUrl">
+      <div class="item" tabindex="0" v-for="(item, index) in filteredItems" :key="item.id" :index="item.index" @keydown="onkeydown" @keydown.enter="open(item.id)" @keydown.delete="close(item.id)" @dblclick="scrape(item)">
+        <img class="favicon" style="grid-area: favicon;" :src="favicon(item)">
         <span class="title" style="grid-area: title;">{{ item.title }}</span>
-        <span class="url" style="grid-area: url;">{{ item.url }}</span>
+        <span class="url" style="grid-area: url;">{{ decodeURI(item.url) }}</span>
         <span class="id" style="grid-area: id;">{{ item.id }}</span>
         <span class="index" style="grid-area: index;">{{ item.index + 1 }}</span>
-        <span class="host" style="grid-area: host;">{{ 'host' }}</span>
         <div class="actions" style="grid-area: actions;">
           <span class="material-icons action open-button" @click="open(item.id)">north_east</span>
           <span class="material-icons action close-button" @click="close(item.id)">close</span>

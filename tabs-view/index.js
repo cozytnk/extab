@@ -4,152 +4,36 @@ console.log(chrome.runtime.id)
 const browser = (() => {
   const browser = {}
 
-  for (const name of ['tabs', 'windows', 'storage']) {
+  for (const name of ['tabs', 'windows']) {
     browser[name] = {}
     for (const [key, value] of Object.entries(chrome[name] || {})) {
       browser[name][key] = (...args) => new Promise(resolve => value?.(...args, resolve))
     }
   }
 
+  browser.tabs.utls = {
+    executeScript: (tabId, f) => browser.tabs.executeScript(tabId, { code: `(${f}) ()` }),
+  }
+
   return browser
 }) ()
 
 
-
-const tabsManagerMixin = {
-  data: {
-    windows: [],
-    currentWindowId: null,
-    selectedWindowId: null,
-    tabs: [],
-  },
-  async mounted () {
-
-    /* monitor tabs */
-
-    chrome.tabs.onActivated.addListener(async activeInfo => {
-      console.debug(`@chrome.tabs.onActivated`, activeInfo)
-      const { tabId, windowId } = activeInfo
-      this.updateTab(tabId)
-      // this.updateAllTabs()
-    })
-
-    chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-      console.debug(`@chrome.tabs.onUpdated`, tabId, changeInfo, tab)
-      const { status } = changeInfo
-      if (status === 'complete') {
-        this.updateTab(tabId)
-        // this.updateAllTabs()
-      }
-
-    })
-
-    chrome.tabs.onMoved.addListener(async (tabId, moveInfo) => {
-      console.debug(`@chrome.tabs.onMoved`, tabId, moveInfo)
-      const { fromIndex, toIndex, windowId } = moveInfo
-      if (windowId === this.selectedWindowId) {
-        this.removeTab(tabId)
-        this.updateTab(tabId)
-      }
-    })
-
-    chrome.tabs.onDetached.addListener(async (tabId, detachInfo) => {
-      console.debug(`@chrome.tabs.onDetached`, tabId, detachInfo)
-      const { oldPosition, oldWindowId } = detachInfo
-      if (oldWindowId === this.selectedWindowId) {
-        this.removeTab(tabId)
-      }
-    })
-
-    chrome.tabs.onAttached.addListener(async (tabId, attachInfo) => {
-      console.debug(`@chrome.tabs.onAttached`, tabId, attachInfo)
-      const { newPosition, newWindowId } = attachInfo
-      if (newWindowId === this.selectedWindowId) {
-        this.updateTab(tabId)
-      }
-    })
-
-    chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
-      console.debug(`@chrome.tabs.onRemoved`, tabId, removeInfo)
-      this.removeTab(tabId)
-      // app.updateAllTabs()
-    })
-
-    /* monitor windows */
-
-    chrome.windows.onCreated.addListener(window => {
-      console.debug(`@chrome.windows.onCreated`, window)
-      this.updateWindows()
-    })
-
-    chrome.windows.onRemoved.addListener(windowId => {
-      console.debug(`@chrome.windows.onRemoved`, windowId)
-      this.updateWindows()
-    })
-
-    /* init */
-    await this.updateWindows()
-    await this.updateAllTabs()
-  },
-  methods: {
-    async updateWindows () {
-      this.windows = await browser.windows.getAll()
-      this.currentWindowId = (await browser.windows.getCurrent()).id
-      if (this.windows.findIndex(win => win.id === this.selectedWindowId) === -1) this.selectedWindowId = this.currentWindowId
-    },
-    async updateAllTabs () {
-      const tabs = await browser.tabs.query({ windowId: this.selectedWindowId })
-      for (const tab of tabs) tab.thumbnail = await getThumbnail(tab.id)
-      this.tabs = tabs
-    },
-    async updateTab (tabId) {
-      const tab = await browser.tabs.get(tabId)
-      if (tab.windowId !== this.selectedWindowId) return
-
-      tab.thumbnail = await getThumbnail(tabId)
-      const i = this.tabs.findIndex(tab => tab.id === tabId)
-      if (i === -1) {
-        this.tabs.splice(tab.index, 0, tab) // tab.index番目にリアクティブに挿入
-      } else {
-        this.tabs.splice(i, 1, tab) // i番目をリアクティブに差し替え
-      }
-    },
-    removeTab (tabId) {
-      console.debug(`@app.removeTab`, tabId)
-      const i = this.tabs.findIndex(tab => tab.id === tabId)
-      if (i !== -1) this.tabs.splice(i, 1) // リアクティブにi番目の要素を削除
-    },
-  },
-}
-
-
-
-/**
- * vue instance
- */
 const app = new Vue({
   el: '#app',
-  // mixins: [ tabsManagerMixin ],
   data: {
     windowId: null,
     windows: [],
     items: [],
     //
-    filters: {
-      title: { text: '', usesRegExp: false },
-      url  : { text: '', usesRegExp: false },
-    },
-    //
     itemsLayout: 'list',
+    //
+    filter: { text: '', usesRegExp: false },
+    //
   },
   computed: {
-    filteredTabs () {
-      // const titleFilterFunc = this.$refs?.filterTitle?.test
-      // const   urlFilterFunc = this.$refs?.filterUrl?.test
-      // return this.tabs.filter((tab, index) => {
-      //   return (titleFilterFunc ? titleFilterFunc(tab.title) : true)
-      //     &&   (urlFilterFunc   ?   urlFilterFunc(tab.url  ) : true)
-      // })
+    filteredItems () {
+      return this.items.filter(item => item.title.includes(this.filter.text) || item.url.includes(this.filter.text))
     },
   },
   watch: {
@@ -175,7 +59,6 @@ const app = new Vue({
       for (const [j, item] of this.items.entries()) item.index = j
     },
     removeItem (id) {
-      console.debug(`@app.removeItem`, id)
       const i = this.items.findIndex(item => item.id === id)
       if (i !== -1) this.items.splice(i, 1) // リアクティブにi番目の要素を削除
       for (const [j, item] of this.items.entries()) item.index = j
@@ -192,7 +75,6 @@ const app = new Vue({
     focusItem (index) {
       index = Math.max(index, 0)
       index = Math.min(index, this.items.length - 1)
-      // document.querySelector(`.item-index-${index}`).focus()
       document.querySelector(`.item[index="${index}"]`).focus()
     },
     onkeydown (event) {
@@ -205,53 +87,40 @@ const app = new Vue({
         :           event.key === 'ArrowDown'  ? gridColumnCount
         :           0
       const index = Number(event.target.getAttribute('index'))
-      // console.log(index + shift)
       this.focusItem(index + shift)
+    },
+    async scrape (item) {
+      return
+      // TODO:
+      const [ret] = await browser.tabs.utls.executeScript(item.id, () => document.title)
+      alert(JSON.stringify(ret, null, 2))
+    },
+    //
+    checkDuplicates () {
+      const duplicates = []
+      for (const [i, item] of this.items.entries()) {
+        for (const [j, item2] of this.items.entries()) {
+          if (i >= j) continue
+          if (item.url === item2.url) {
+            // item.duplicate = true
+            // item2.duplicate = true
+            // this.$set(item, 'duplicate', true)
+            // this.$set(item2, 'duplicate', true)
+            duplicates.push(item.title)
+          }
+        }
+      }
+      alert(`${duplicates.length} duplicated tabs:\n  ${duplicates.join('\n  ')}`)
+    },
+    favicon (item) {
+      return item.url === 'chrome://extensions/' ? '../assets/baseline_extension_black_48dp.png'
+        :    item.url === chrome.runtime.getURL('tabs-view/index.html') ? '../assets/favicon.png'
+        :    /(png|jpe?g|gif)([^a-zA-Z\d]|$)/i.test(item.url) ? item.url
+        :    /pdf([^a-zA-Z\d]|$)/i.test(item.url) ? '../assets/PDF.png'
+        :    item.favIconUrl
     },
   },
 })
-
-
-/**
- * utils
- */
-
-const getThumbnail = async (tabId) => {
-  const key = `${tabId}`
-  return ''
-  // const items = await browser.storage.local.get({ [key]: { dataUrl: null } })
-  // return items[key].dataUrl
-}
-
-
-/**
- * monitor local storage
- */
-
-// chrome.storage.onChanged.addListener(async (changes, namespace) => {
-//   console.debug(`@chrome.storage.onChanged`, changes, namespace)
-//   console.assert(namespace === 'local')
-
-//   for (const key in changes) {
-
-//     if (key === 'settings') {
-//       Vue.set(app, 'settings', changes.settings.newValue)
-//     } else {
-//       const tabId = Number(key)
-//       const change = changes[key]
-//       if (!change.newValue) continue
-//       app.setThumbnail(tabId, change.newValue.dataUrl)
-//     }
-//   }
-
-//   const bytesInUse = await browser.storage.local.getBytesInUse(null)
-//   const bytesInUse_XB = bytesInUse &&
-//     (bytesInUse < 1024   ) ? `${bytesInUse} B` :
-//     (bytesInUse < 1048576) ? `${(bytesInUse / 1024).toFixed(2)} KB` :
-//     `${(bytesInUse / 1048576).toFixed(2)} MB`
-//   Vue.set(app, 'bytesInUse_XB', bytesInUse_XB)
-
-// })
 
 
 /* monitor tabs and windows */
@@ -259,8 +128,6 @@ const getThumbnail = async (tabId) => {
   // chrome.tabs.onActivated.addListener(async activeInfo => {
   //   console.debug(`@chrome.tabs.onActivated`, activeInfo)
   //   const { tabId, windowId } = activeInfo
-  //   this.updateTab(tabId)
-  //   // this.updateAllTabs()
   // })
 
   chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
@@ -268,38 +135,38 @@ const getThumbnail = async (tabId) => {
     const { status } = changeInfo
     if (status === 'complete') {
       const tab = await browser.tabs.get(tabId)
-      // if (tab.windowId !== this.selectedWindowId) return
-      // tab.thumbnail = await getThumbnail(tabId)
-      app.updateItem(tab)
-      // this.updateAllTabs()
+      if (tab.windowId === app.windowId) {
+        app.updateItem(tab)
+      }
     }
   })
 
   chrome.tabs.onMoved.addListener(async (tabId, moveInfo) => {
     console.debug(`@chrome.tabs.onMoved`, tabId, moveInfo)
     const { fromIndex, toIndex, windowId } = moveInfo
-    // if (windowId === this.selectedWindowId) {
+    if (windowId === app.windowId) {
       const tab = await browser.tabs.get(tabId)
       app.removeItem(tabId)
       app.updateItem(tab)
-    // }
+    }
   })
 
-  // chrome.tabs.onDetached.addListener(async (tabId, detachInfo) => {
-  //   console.debug(`@chrome.tabs.onDetached`, tabId, detachInfo)
-  //   const { oldPosition, oldWindowId } = detachInfo
-  //   if (oldWindowId === this.selectedWindowId) {
-  //     this.removeTab(tabId)
-  //   }
-  // })
+  chrome.tabs.onDetached.addListener(async (tabId, detachInfo) => {
+    console.debug(`@chrome.tabs.onDetached`, tabId, detachInfo)
+    const { oldPosition, oldWindowId } = detachInfo
+    if (oldWindowId === app.windowId) {
+      app.removeItem(tabId)
+    }
+  })
 
-  // chrome.tabs.onAttached.addListener(async (tabId, attachInfo) => {
-  //   console.debug(`@chrome.tabs.onAttached`, tabId, attachInfo)
-  //   const { newPosition, newWindowId } = attachInfo
-  //   if (newWindowId === this.selectedWindowId) {
-  //     this.updateTab(tabId)
-  //   }
-  // })
+  chrome.tabs.onAttached.addListener(async (tabId, attachInfo) => {
+    console.debug(`@chrome.tabs.onAttached`, tabId, attachInfo)
+    const { newPosition, newWindowId } = attachInfo
+    if (newWindowId === app.windowId) {
+      const tab = await browser.tabs.get(tabId)
+      app.updateItem(tab)
+    }
+  })
 
   chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
     console.debug(`@chrome.tabs.onRemoved`, tabId, removeInfo)

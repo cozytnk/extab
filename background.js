@@ -62,7 +62,7 @@ chrome.commands.onCommand.addListener(async cmd => {
     await browser.tabs.update(newtab.id, { active: true })
   }
 
-  if (cmd === 'OpenExtab') {
+  if (cmd === 'OpenPage') {
     await openPage()
   }
 
