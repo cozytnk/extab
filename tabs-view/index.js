@@ -68,13 +68,14 @@ const app = new Vue({
       chrome.tabs.update(id, { active: true })
     },
     close (id) {
-      const focusedItemIndex = Number(document.querySelector('.items:focus')?.getAttribute?.('index') ?? -1)
+      const focusedItemIndex = Number(document.querySelector('.item:focus')?.getAttribute?.('index') ?? -1)
       focusedItemIndex > -1 && this.focusItem(Math.max(focusedItemIndex - 1, 0))
       chrome.tabs.remove(id)
     },
     focusItem (index) {
+      console.log(index)
       index = Math.max(index, 0)
-      index = Math.min(index, this.items.length - 1)
+      index = Math.min(index, this.filteredItems.length - 1)
       document.querySelector(`.item[index="${index}"]`).focus()
     },
     onkeydown (event) {
