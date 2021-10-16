@@ -126,10 +126,16 @@ const app = new Vue({
 
 /* monitor tabs and windows */
 {
-  // chrome.tabs.onActivated.addListener(async activeInfo => {
-  //   console.debug(`@chrome.tabs.onActivated`, activeInfo)
-  //   const { tabId, windowId } = activeInfo
-  // })
+  chrome.tabs.onActivated.addListener(async activeInfo => {
+    console.debug(`@chrome.tabs.onActivated`, activeInfo)
+    const { tabId, windowId } = activeInfo
+    if (windowId === app.windowId) {
+      const oldActiveTab = app.items.find(item => item.active)
+      oldActiveTab && app.updateItem({ ...oldActiveTab, active: false })
+      const tab = await browser.tabs.get(tabId)
+      app.updateItem(tab)
+    }
+  })
 
   chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     console.debug(`@chrome.tabs.onUpdated`, tabId, changeInfo, tab)

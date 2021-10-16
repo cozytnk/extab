@@ -91,6 +91,9 @@ a.logo {
   display: flex;
   flex-direction: column;
 }
+.item.active {
+  background-color: rgba(255, 0, 0, 0.3);
+}
 .listview .item {
   padding: 6px 16px;
   border-bottom: 1px solid #ddd;
@@ -164,7 +167,15 @@ a.logo {
     </div>
 
     <div class="main items" :class="{ listview: itemsLayout === 'list', gridview: itemsLayout === 'grid' }">
-      <div class="item" tabindex="0" v-for="(item, index) in filteredItems" :key="item.id" :index="index" @keydown="onkeydown" @keydown.enter="open(item.id)" @keydown.delete="close(item.id)" @dblclick="scrape(item)">
+      <div class="item" tabindex="0"
+        v-for="(item, index) in filteredItems" :key="item.id"
+        :class="{ active: item.active }"
+        :index="index"
+        @keydown="onkeydown"
+        @keydown.enter="open(item.id)"
+        @keydown.delete="close(item.id)"
+        @dblclick="scrape(item)"
+      >
         <img class="favicon" style="grid-area: favicon;" :src="favicon(item)">
         <span class="title" style="grid-area: title;">{{ item.title }}</span>
         <span class="url" style="grid-area: url;">{{ decodeURI(item.url) }}</span>
