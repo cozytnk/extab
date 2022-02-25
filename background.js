@@ -1,70 +1,39 @@
-console.log(chrome.runtime.id)
 
 
-const browser = (() => {
-  const browser = {}
 
-  for (const name of ['tabs', 'windows']) {
-    browser[name] = {}
-    for (const [key, value] of Object.entries(chrome[name] || {})) {
-      browser[name][key] = (...args) => new Promise(resolve => value?.(...args, resolve))
-    }
-  }
+chrome.action.onClicked.addListener(async tab => {
+  console.log('@chrome.action.onClicked', tab)
 
-  return browser
-}) ()
-
-
-const openPage = async () => {
-  const [ tab ] = await browser.tabs.query({ url: chrome.runtime.getURL('tabs-view/index.html'), currentWindow: true })
-  if (tab) {
-    chrome.tabs.update(tab.id, { active: true })
-  } else {
-    chrome.tabs.create({ url: 'tabs-view/index.html' })
-  }
-}
-
-
-/**
- * アイコン押下時
- */
-
-chrome.browserAction.onClicked.addListener(async tab => {
-  await openPage()
+  await chrome.tabs.create({ url: '/page/index.html', index: tab.index + 1 })
 })
 
 
-/**
- * ショートカット
- */
 
-chrome.commands.onCommand.addListener(async cmd => {
-  console.log(`@onCommand`, cmd)
+chrome.commands.onCommand.addListener(async command => {
+  console.log(`@chrome.commands.onCommand`, command)
 
-  if (cmd === 'Delete') {
-    const [ currentTab ] = await browser.tabs.query({ active: true, currentWindow: true })
-    await browser.tabs.remove(currentTab.id)
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+
+  if (command === 'Delete') {
+    await chrome.tabs.remove(tab.id)
   }
 
-  if (cmd === 'Right') {
-    const tabs = await browser.tabs.query({ currentWindow: true })
-    const [ currentTab ] = await browser.tabs.query({ active: true, currentWindow: true })
-    const newIndex = (currentTab.index + 1 + tabs.length) % tabs.length
-    const newtab = tabs[newIndex]
-    await browser.tabs.update(newtab.id, { active: true })
+  else if (command === 'Right') {
+    const tabs = await chrome.tabs.query({ currentWindow: true })
+    const newIndex = (tab.index + 1 + tabs.length) % tabs.length
+    const newTab = tabs[newIndex]
+    await chrome.tabs.update(newTab.id, { active: true })
   }
 
-  if (cmd === 'Left') {
-    const tabs = await browser.tabs.query({ currentWindow: true })
-    const [ currentTab ] = await browser.tabs.query({ active: true, currentWindow: true })
-    const newIndex = (currentTab.index - 1 + tabs.length) % tabs.length
-    const newtab = tabs[newIndex]
-    await browser.tabs.update(newtab.id, { active: true })
+  else if (command === 'Left') {
+    const tabs = await chrome.tabs.query({ currentWindow: true })
+    const newIndex = (tab.index - 1 + tabs.length) % tabs.length
+    const newTab = tabs[newIndex]
+    await chrome.tabs.update(newTab.id, { active: true })
   }
 
-  if (cmd === 'OpenPage') {
-    await openPage()
+  else if (command === 'OpenPage') {
+    await chrome.tabs.create({ url: '/page/index.html', index: tab.index + 1 })
   }
 
 })
-

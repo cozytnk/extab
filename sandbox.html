@@ -1,0 +1,290 @@
+<html>
+<head lang="ja">
+  <title>extab3</title>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22256%22 height=%22256%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2250%22 fill=%22%234169e1%22></rect><path fill=%22%23ffffff%22 d=%22M71.71 64.22L71.71 64.22Q70.81 65.48 69.06 67.12Q67.30 68.77 64.69 70.27Q62.08 71.78 58.62 72.77Q55.15 73.76 50.79 73.76L50.79 73.76Q44.04 73.76 38.95 71.02Q33.87 68.27 31.08 62.98Q28.29 57.69 28.29 50.09L28.29 50.09Q28.29 42.80 31.33 37.45Q34.36 32.09 39.67 29.16Q44.98 26.24 51.87 26.24L51.87 26.24Q60.51 26.24 65.34 31.50Q70.18 36.77 70.72 45.63L70.72 45.63Q70.81 47.07 70.81 48.40Q70.81 49.73 70.68 51.13L70.68 51.13Q70.09 51.08 68.27 51.01Q66.45 50.94 64.02 50.88Q61.59 50.81 59.14 50.74Q56.68 50.67 54.93 50.67L54.93 50.67Q50.38 50.67 45.61 51.13Q40.84 51.57 37.11 52.16L37.11 52.16Q37.15 53.33 37.33 54.45Q37.51 55.58 37.78 56.61L37.78 56.61Q38.55 59.36 40.57 61.36Q42.60 63.36 45.41 64.44Q48.22 65.52 51.37 65.52L51.37 65.52Q54.70 65.52 57.18 64.53Q59.65 63.54 61.43 62.10Q63.21 60.66 64.31 59.36Q65.41 58.05 66.00 57.42L66.00 57.42Q66.27 57.65 67.06 58.39Q67.84 59.13 68.77 60.17Q69.69 61.20 70.52 62.26Q71.35 63.32 71.71 64.22ZM37.24 46.13L37.24 46.13Q40.48 45.59 44.87 45.18Q49.26 44.78 54.84 44.78L54.84 44.78Q57.76 44.78 59.81 44.85Q61.86 44.91 62.67 45.00L62.67 45.00Q62.67 43.52 62.31 41.85L62.31 41.85Q61.81 39.60 60.51 37.49Q59.20 35.38 56.98 33.96Q54.75 32.54 51.37 32.54L51.37 32.54Q47.50 32.54 44.33 34.18Q41.16 35.82 39.27 38.86Q37.38 41.90 37.24 46.13Z%22></path></svg>" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Grandstander&display=swap&text=extab" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.min.js"></script>
+<style>
+* { box-sizing: border-box; }
+body { width: 100%; height: 100vh; margin: 0; padding: 0; overflow: hidden; }
+#app {
+  width: 100%; height: 100%;
+  display: grid;
+  grid-template:
+    "header header"
+    "main   side" minmax(0, 1fr)
+    / minmax(0, 1fr) auto;
+  background-color: #fff;
+  color: #111;
+  font-size: 13px;
+}
+.header {
+  grid-area: header;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 15px;
+  /* background-color: #444; */
+  /* color: #eee; */
+  border-bottom: 2px solid #ddd;
+  font-size: 14px;
+}
+.header > a.logo {
+  height: 28px;
+  padding: 8px 10px;
+  background-color: royalblue;
+  border-radius: 100px;
+  font-family: 'Grandstander';
+  color: #fff;
+  font-size: 15px;
+  text-decoration: none;
+}
+.header > input[type=text] {
+  flex: 1;
+  height: 28px;
+  min-width: 50px;
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: none;
+  padding-right: 28px;
+}
+.header > select {
+  height: 28px;
+  min-width: 50px;
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: none;
+  color: #333;
+}
+.header > .material-icons {
+  cursor: pointer;
+}
+.side {
+  grid-area: side;
+  width: 0px;
+  background-color: #ccc;
+}
+.main.grid {
+  grid-area: main;
+  overflow-y: auto;
+  display: grid;
+  /* grid-template-columns: repeat(auto-fit, minmax(calc((100% - 15px * 5) / 6), 1fr)); */
+  /* grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); */
+  grid-template-columns: repeat(auto-fit, 100px);
+  /* grid-template-rows: repeat(auto-fill, minmax(200px, 1fr)); */
+  /* grid-template-rows: repeat(auto, max-content); */
+  justify-content: center;
+  gap: 20px 15px;
+  padding: 15px;
+}
+.grid .item {
+  /* height: max-content; */
+  /* height: 185px; */
+  display: flex; flex-direction: column; gap: 5px;
+  border-bottom: 2px solid #ddd;
+  padding-bottom: 2px;
+}
+.grid .item > img {
+  width: 100%;
+  height: calc(100px / 16 * 9);
+  /* height: calc(attr(width px) / 16 * 9); */
+  /* aspect-ratio: 16 / 9; */
+  border: 1px solid #ddd;
+  object-fit: contain;
+}
+.grid .item > .title {
+  --lines: 3;
+  height: calc(1.4 * var(--lines));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box !important;
+  -webkit-line-clamp: var(--lines);
+  -webkit-box-orient: vertical;
+  white-space: normal;
+}
+.grid .item > .domain {
+  font-size: 12px;
+  color: #888;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.grid .item > .item-footer {
+  display: flex;
+}
+.grid .item > .item-footer > .material-icons {
+  font-size: 15px;
+  color: #888;
+  cursor: pointer;
+}
+.grid .item > .item-footer > .material-icons:hover {
+  color: #222;
+}
+.grid .item:focus {
+  outline: 2px solid orange;
+}
+
+button.material-icons {
+  border: none;
+  background-color: transparent;
+}
+</style>
+</head>
+
+<body>
+<div id="app">
+
+  <div class="header">
+    <a class="logo" href="https://github.com/cozytnk/extab">extab</a>
+    <span>{{ filteredItems.length }} tabs</span>
+    <!-- <div style="margin: auto;"></div> -->
+    <input type="text" placeholder="filter" v-model="filter" autocomplete="on" list="datalist">
+    <datalist id="datalist">
+      <option v-for="item in filteredItems" :key="item.id" :value="item.title"></option>
+    </datalist>
+    <select v-model="selectedWindowId">
+      <option v-for="window in windows" :value="window.id"> window {{ window.id }}</option>
+    </select>
+    <!-- <span class="material-icons">extension</span> -->
+    <button class="material-icons" @click="reloadItems">refresh</button>
+  </div>
+
+  <div class="side">hoge</div>
+
+  <div class="main grid">
+
+    <div class="item"
+      v-for="item in filteredItems" :key="item.id"
+      tabindex="0"
+      @click="this.focus()"
+      @keydown.enter=";"
+    >
+      <div style="height: 10px; display: flex; color: red; font-weight: bold; margin-bottom: 2px;">
+        <span v-if="item.active">active</span>
+        <div style="margin: auto;"></div>
+        <span v-if="item.audible" class="material-icons" style="font-size: 15px;">volume_up</span>
+      </div>
+      <img :src="toImage(item)" loading="lazy">
+      <span class="title">{{ item.title ?? 'No Title' }}</span>
+      <div style="margin: auto;"></div>
+      <span class="domain">{{ item.url?.match?.(/:\/\/([^\/]+)\//)?.[1] ?? '' }}</span>
+      <span class="item-footer">
+        <span>{{ item.index + 1 }}</span>
+        <div style="margin: auto;"></div>
+        <span class="material-icons" @click="removeItem(item.id)">delete_outline</span>
+        <span class="material-icons" @click="activateItem(item.id)">launch</span>
+      </span>
+    </div>
+
+  </div>
+
+</div>
+<script>
+/**
+ *
+ */
+console.log('@sandbox.html')
+const dummyItems = [
+  { id: 10, windowId: 100, url: 'http://dummy/aaa', title: 'A', favIconUrl: '' },
+  {
+    id: 11, windowId: 100, url: 'http://dummy/bbb', title: 'B', favIconUrl: '',
+    active: true, audible: true, incognito: false,
+    status: 'complete', // or 'unloaded', 'loading'
+  },
+  { id: 12, windowId: 100, url: 'http://dummy/ccc', title: 'C', favIconUrl: '' },
+  { id: 13, windowId: 200, url: 'http://dummy/ddd', title: 'D', favIconUrl: '' },
+  { id: 14, windowId: 200, url: 'http://dummy/eee', title: 'E', favIconUrl: '' },
+]
+for (let i = 0; i < 30; i++) {
+  dummyItems.push({ id: 20+i, windowId: 200, url: 'http://dummy/eee', title: 'F', favIconUrl: '' })
+}
+
+
+let sendMessage = () => {}
+window.addEventListener('message', event => {
+  console.log('@sandbox.message', event)
+
+  sendMessage = (message) => {
+    event.source.postMessage(message, event.origin)
+  }
+
+  const { command, args } = event.data
+  app[command]?.(...args)
+
+  // event.source.postMessage({ a: 123 }, event.origin)
+})
+
+
+const app = new Vue({
+  el: '#app',
+  data () {
+    return {
+      //
+      selectedWindowId: null,
+      items: [],
+      focusedItemId: null,
+      //
+      filter: '',
+      // viewMode: 'grid',
+      // cols: 6,
+    }
+  },
+  computed: {
+    windows () {
+      const windowIds = [...new Set(this.items.map(item => item.windowId))]
+      return windowIds.map(id => ({ id }))
+    },
+    filteredItems () {
+      return this.items
+        .filter(item => item.windowId === this.selectedWindowId)
+        .filter(item => item.title.toLowerCase().includes(this.filter.toLowerCase()))
+    },
+  },
+  mounted () {
+    console.log('@mounted')
+    // this.setItems(dummyItems)
+    // this.selectedWindowId = this.windows[0]?.id
+  },
+  methods: {
+    //
+    toImage (item) {
+      return item.ogImage ?? item.favIconUrl //?? '/NoImage_160x90.png'
+    },
+    //
+    setItems (items) {
+      this.items = items
+    },
+    setWindowId (id) {
+      console.log('@setWindowId', id)
+      this.selectedWindowId = id
+    },
+    // user input
+    reloadItems () {
+      sendMessage({ command: 'reload' })
+    },
+    activateItem (id) {
+      sendMessage({ command: 'activate', args: [id] })
+    },
+    removeItem (id) {
+      sendMessage({ command: 'remove', args: [id] })
+    },
+    moveItem (id, toIndex) {
+      // TODO:
+    },
+  },
+})
+
+
+// // ?view=grid|list windowid=123 demo=1|0
+// const getURLParamers = () => location.search.replace(/^\?/, '').split('&').reduce((params, s) => {
+//   const [k, v] = s.split('=')
+//   params[decodeURIComponent(k)] = decodeURIComponent(v)
+//   return params
+// }, {})
+</script>
+</body>
+</html>
