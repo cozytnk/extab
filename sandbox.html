@@ -184,24 +184,7 @@ button.material-icons {
 
 </div>
 <script>
-/**
- *
- */
 console.log('@sandbox.html')
-const dummyItems = [
-  { id: 10, windowId: 100, url: 'http://dummy/aaa', title: 'A', favIconUrl: '' },
-  {
-    id: 11, windowId: 100, url: 'http://dummy/bbb', title: 'B', favIconUrl: '',
-    active: true, audible: true, incognito: false,
-    status: 'complete', // or 'unloaded', 'loading'
-  },
-  { id: 12, windowId: 100, url: 'http://dummy/ccc', title: 'C', favIconUrl: '' },
-  { id: 13, windowId: 200, url: 'http://dummy/ddd', title: 'D', favIconUrl: '' },
-  { id: 14, windowId: 200, url: 'http://dummy/eee', title: 'E', favIconUrl: '' },
-]
-for (let i = 0; i < 30; i++) {
-  dummyItems.push({ id: 20+i, windowId: 200, url: 'http://dummy/eee', title: 'F', favIconUrl: '' })
-}
 
 
 let sendMessage = () => {}
@@ -277,14 +260,6 @@ const app = new Vue({
     },
   },
 })
-
-
-// // ?view=grid|list windowid=123 demo=1|0
-// const getURLParamers = () => location.search.replace(/^\?/, '').split('&').reduce((params, s) => {
-//   const [k, v] = s.split('=')
-//   params[decodeURIComponent(k)] = decodeURIComponent(v)
-//   return params
-// }, {})
 </script>
 </body>
 </html>
